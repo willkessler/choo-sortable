@@ -1,0 +1,21 @@
+ul {
+    list-style-type: none;
+}
+
+.reorder-handle {
+    vertical-align:top;
+    padding:2px;
+    display:inline-block;
+    opacity:0.5;
+    cursor:-webkit-grabbing;
+} 
+
+.list-item {
+    border:none;
+    color:#00f;
+    font-size:15px;
+    text-decoration:none;
+    display:inline-block;
+    width:calc(100% - 44px);
+}
+
