@@ -1,6 +1,6 @@
 const jquery = require('jquery');
 const choo = require('choo');
-const beautify = require('js-beautify');
+const Primsjs = require('prismjs');
 const app = choo();
 
 const STORAGE_ID = 'sortable-choo'
@@ -46,11 +46,14 @@ function view (params, state, send) {
              <h3>Source</h3>
 	     <div style="padding:10px;border:1px dashed #eee">
              <div>
-	       <pre>
-                 <code>
-	            ${state.theSource}
+	      <a href="https://github.com/willkessler/choo-sortable">Source code on github</a>
+	      <hr>
+              <h4>And now, a crappily formatted version of source, showing how I have no idea how choo.view really works, since it does not seem to handle output from Prismjs.</h4>
+               <pre>
+                 <code class="language-javascript">
+                   ${choo.view`${state.theSource}`}
                  </code>
-	       </pre>
+               </pre>
              </div>
 	   </div>
 	  `
@@ -100,7 +103,7 @@ Array.prototype.replace = function (index, value) {
 
 app.model({
     state: {
-	title: 'Some title',
+	title: 'Sortable lists in choo',
 	theList: ['apple', 'banana', 'durian', 'mango' ],
 	theSource: ''
     },
@@ -130,7 +133,11 @@ app.model({
             },1);
 	},
 	(send) => {
-	    jquery.get('https://raw.githubusercontent.com/willkessler/choo-sortable/master/sortable.js', function(sourceCode) {
+	    let sourceCodeUrl;
+	    sourceCodeUrl = 'https://raw.githubusercontent.com/willkessler/choo-sortable/master/sortable.js';
+	    sourceCodeUrl = 'https://raw.githubusercontent.com/terminalcloud/edu-clients-example-code/master/src/lib/bookmarklet/bookmarklet.js?token=AAKwjJi3Wnqs9rURd97wmFbeZO7fQzZUks5Xdpp6wA%3D%3D';
+	    jquery.get(sourceCodeUrl, function(sourceCode) {
+
 		send('addSourceCode', {data: sourceCode});
 	    });
 	}
@@ -139,11 +146,6 @@ app.model({
 	'reorderItems' :  (action, state) => console.log('effect:' , action.data),
 	'addSourceCode' : (action, state) => {
 	    console.log('added source code, trying to highlight');
-	    setTimeout(function() {
-		jquery('pre code').each(function(i, block) {
-	            hljs.highlightBlock(block);
-		});
-	    }, 1);
 	}
     },
     reducers: {
@@ -164,10 +166,8 @@ app.model({
         },
 	addSourceCode: function(action,state) {
 	    console.log('got source code:', action.data);
-	    let foo='"hi"';
-	    console.log('foo', foo.unquoted());
-	    let cleanData = action.data.unquoted().trim();
-	    return { title: state.title, theList: state.theList, theSource: cleanData };
+	    let codeHtml = Prism.highlight(action.data.unquoted().trim().replace(/\`/g, ' '), Prism.languages.javascript);
+	    return { title: state.title, theList: state.theList, theSource: codeHtml };
 	}
     },
 });

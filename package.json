@@ -30,6 +30,7 @@
     "gulp-surge": "^0.1.0",
     "jquery": "^3.0.0",
     "js-beautify": "^1.6.3",
+    "prismjs": "^1.5.1",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0"
   }
