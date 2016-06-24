@@ -1,5 +1,7 @@
-const choo = require('choo')
-const app = choo()
+const jquery = require('jquery');
+const choo = require('choo');
+const beautify = require('js-beautify');
+const app = choo();
 
 const STORAGE_ID = 'sortable-choo'
 const save = (action, state, send) => {
@@ -36,12 +38,21 @@ function view (params, state, send) {
  	        })}
               </ul>
               <form onsubmit=${onSubmit}>
-              New: <input type="text" name="new_item" value="foo"
+              New: <input type="text" name="new_item" value="" placeholder="enter a new fruit"
                     onkeydown=${e => e.keyCode === 13 && onEnter(event) || true}
                    >
                    <input type="submit" value="Submit">
 	      </form>
-          </div>
+             <h3>Source</h3>
+	     <div style="padding:10px;border:1px dashed #eee">
+             <div>
+	       <pre>
+                 <code>
+	            ${state.theSource}
+                 </code>
+	       </pre>
+             </div>
+	   </div>
 	  `
     
     console.log(newView);
@@ -68,6 +79,9 @@ function view (params, state, send) {
 
 // http://stackoverflow.com/questions/872310/javascript-swap-array-elements
 
+String.prototype.unquoted = function (){return this.replace (/(^")|("$)/g, '')};
+String.prototype.trim = function() { return String(this).replace(/^\s+|\s+$/g, ''); };
+
 Array.prototype.move = function (old_index, new_index) {
     if (new_index >= this.length) {
 	var k = new_index - this.length;
@@ -87,7 +101,8 @@ Array.prototype.replace = function (index, value) {
 app.model({
     state: {
 	title: 'Some title',
-	theList: ['apple', 'banana', 'durian', 'mango' ]
+	theList: ['apple', 'banana', 'durian', 'mango' ],
+	theSource: ''
     },
     subscriptions: [
 	(send) => {
@@ -114,26 +129,46 @@ app.model({
 		});
             },1);
 	},
+	(send) => {
+	    jquery.get('https://raw.githubusercontent.com/willkessler/choo-sortable/master/sortable.js', function(sourceCode) {
+		send('addSourceCode', {data: sourceCode});
+	    });
+	}
     ],
     effects: {
-	'reorderItems' :  (action, state) => console.log('effect:' , action.data)
+	'reorderItems' :  (action, state) => console.log('effect:' , action.data),
+	'addSourceCode' : (action, state) => {
+	    console.log('added source code, trying to highlight');
+	    setTimeout(function() {
+		jquery('pre code').each(function(i, block) {
+	            hljs.highlightBlock(block);
+		});
+	    }, 1);
+	}
     },
     reducers: {
 	addItem: function(action,state) {
 	    console.log('addItem: action=', action.data, ' state=', state);
-	    return { title: action.data, theList: state.theList.concat(action.data) }
+	    return { title: action.data, theList: state.theList.concat(action.data), theSource: state.theSource }
 	},
 	editItem: function(action,state) {
 	    console.log('editItem: action=', action.data, ' state=', state);
-	    return { title: action.data.value, theList: state.theList.slice().replace(action.data.index, action.data.value) }
+	    return { title: action.data.value, theList: state.theList.slice().replace(action.data.index, action.data.value), theSource: state.theSource }
 	},
         reorderItems: function(action, state) {
 	    console.log('got action data', action.data);
 	    console.log('state.theList', state.theList);
 	    var newList = state.theList.move(action.data.oldPosition, action.data.newPosition);
 	    console.log('newList:', newList);
-	    return { title: state.title, theList: newList};
+	    return { title: state.title, theList: newList, theSource: state.theSource };
         },
+	addSourceCode: function(action,state) {
+	    console.log('got source code:', action.data);
+	    let foo='"hi"';
+	    console.log('foo', foo.unquoted());
+	    let cleanData = action.data.unquoted().trim();
+	    return { title: state.title, theList: state.theList, theSource: cleanData };
+	}
     },
 });
 
